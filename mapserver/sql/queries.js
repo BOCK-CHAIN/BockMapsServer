@@ -1,0 +1,18 @@
+// sql/queries.js
+module.exports = {
+  registerUser: `
+    INSERT INTO users (email, password_hash)
+    VALUES ($1, $2)
+    RETURNING id, email, created_at;
+  `,
+  findUserByEmail: `
+    SELECT id, email, password_hash
+    FROM users
+    WHERE email = $1;
+  `,
+  findUserById: `
+    SELECT id, email, created_at
+    FROM users
+    WHERE id = $1;
+  `,
+};
