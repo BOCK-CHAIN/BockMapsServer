@@ -9,11 +9,17 @@ const checkauthtoken = require('../middleware/auth.js');
 const router = express.Router();
 
 // User Registration API
-router.post('/register', async (req, res) => {
+router.post('/auth/register', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  // ✅ Email format validation using regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
   }
 
   try {
@@ -41,7 +47,7 @@ router.post('/register', async (req, res) => {
 });
 
 // User Login API
-router.post('/login', async (req, res) => {
+router.post('/auth/login', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -56,23 +62,22 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Generate and set the tokens in HTTP-only cookies
+    // Generate and set tokens in HTTP-only cookies
     const authtoken = generateAuthToken(user.id);
     const refreshtoken = generateRefreshToken(user.id);
 
     res.cookie('authtoken', authtoken, { httpOnly: true });
     res.cookie('refreshtoken', refreshtoken, { httpOnly: true });
 
-    res.status(200).json({
-      message: 'Login successful',
-    });
+    res.status(200).json({ message: 'Login successful' });
   } catch (err) {
     console.error('Login failed:', err.stack);
     res.status(500).json({ error: 'Login failed' });
   }
 });
 
-router.get('/profile', checkauthtoken, async (req, res) => {
+// Profile API
+router.get('/auth/profile', checkauthtoken, async (req, res) => {
   try {
     const result = await pool.query(queries.findUserById, [req.userid]);
     const user = result.rows[0];
@@ -96,16 +101,12 @@ router.get('/profile', checkauthtoken, async (req, res) => {
   }
 });
 
-// User Logout API
-router.post('/logout', checkauthtoken, (req, res) => {
-  // Clear the cookies to log the user out
+// Logout API
+router.post('/auth/logout', checkauthtoken, (req, res) => {
   res.clearCookie('authtoken');
   res.clearCookie('refreshtoken');
 
-  res.status(200).json({
-    ok: true,
-    message: 'Logged out successfully',
-  });
+  res.status(200).json({ ok: true, message: 'Logged out successfully' });
 });
 
 module.exports = router;

@@ -4,28 +4,26 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const { connectToDatabase } = require('./config/db.js');
 const authRoutes = require('./api/auth.js');
-const authenticateToken = require('./middleware/auth.js');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Middlewares
 app.use(express.json());
-app.use(cookieParser()); // Use the cookie-parser middleware
+app.use(cookieParser());
 
-// Connect to the database
+// Connect to DB
 connectToDatabase();
 
-// Public routes for authentication
+// Mount routes
 app.use('/api', authRoutes);
 
-
-// Start the server
+// Health check route
 app.get('/', (req, res) => {
   res.send('Welcome to the MapServer API!');
 });
 
-app.listen(port, () => {
-  console.log(`Backend server listening at http://localhost:${port}`);
+// Start server — binding to 0.0.0.0 so emulator can connect
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Backend server listening at http://0.0.0.0:${port}`);
 });
-
-
