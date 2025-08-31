@@ -1,41 +1,21 @@
-// middleware/auth.js
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
-const JWT_REFRESH_SECRET_KEY = process.env.JWT_REFRESH_SECRET_KEY;
+const JWT_SECRET_KEY = process.env.JWT_SECRET || 'your_jwt_secret';
+const JWT_REFRESH_SECRET_KEY = process.env.JWT_REFRESH_SECRET_KEY || 'your_jwt_refresh_secret';
 
 function checkauthtoken(req, res, next) {
-    const authtoken = req.cookies.authtoken;
-    const refreshtoken = req.cookies.refreshtoken;
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer <token>
 
-    if (!authtoken || !refreshtoken) {
-        return res.status(400).json({
-            ok: false,
-            message: 'user is not logged in'
-        });
+    if (!token) {
+        return res.status(401).json({ ok: false, message: 'user is not logged in' });
     }
 
-    jwt.verify(authtoken, JWT_SECRET_KEY, (err, decoded) => {
+    jwt.verify(token, JWT_SECRET_KEY, (err, decoded) => {
         if (err) {
-            jwt.verify(refreshtoken, JWT_REFRESH_SECRET_KEY, (referr, refdecoded) => {
-                if (referr) {
-                    return res.status(400).json({
-                        ok: false,
-                        message: 'both token are invalid'
-                    });
-                } else {
-                    const newauthtoken = jwt.sign({ userid: refdecoded.userid }, JWT_SECRET_KEY, { expiresIn: '1d' });
-                    const newrefreshtoken = jwt.sign({ userid: refdecoded.userid }, JWT_REFRESH_SECRET_KEY, { expiresIn: '1d' });
-
-                    res.cookie('authtoken', newauthtoken, { httpOnly: true });
-                    res.cookie('refreshtoken', newrefreshtoken, { httpOnly: true });
-
-                    req.userid = refdecoded.userid;
-                    next();
-                }
-            });
+            return res.status(401).json({ ok: false, message: 'token invalid or expired' });
         } else {
-            req.userid = decoded.userid;
+            req.userid = decoded.id; // make sure you use the same key as in token
             next();
         }
     });
