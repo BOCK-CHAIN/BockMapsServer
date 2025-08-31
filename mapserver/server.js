@@ -8,6 +8,10 @@ const authRoutes = require('./api/auth.js');
 const app = express();
 const port = process.env.PORT || 3000;
 
+const cors = require('cors');
+app.use(cors()); // allows all origins
+
+
 // Middlewares
 app.use(express.json());
 app.use(cookieParser());
