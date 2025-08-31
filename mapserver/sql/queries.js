@@ -1,4 +1,5 @@
 // sql/queries.js
+
 module.exports = {
   registerUser: `
     INSERT INTO users (email, password_hash)
@@ -15,4 +16,10 @@ module.exports = {
     FROM users
     WHERE id = $1;
   `,
+  findByIdAndUpdate: `
+    UPDATE users
+    SET email = $1
+    WHERE id = $2
+    RETURNING id, email, created_at
+  `
 };
