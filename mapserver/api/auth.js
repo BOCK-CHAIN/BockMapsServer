@@ -3,7 +3,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/db.js');
-const queries = require('../sql/queries.js');
+const queries = require('../sql/user.js');
 const checkauthtoken = require('../middleware/auth.js');
 
 const router = express.Router();
@@ -145,6 +145,7 @@ router.put('/auth/changeEmail', checkauthtoken, async (req, res) => {
   }
 });
 
+//Delete account
 router.delete('/auth/deleteAccount', checkauthtoken, async (req, res) => {
   try {
     const userId = req.userid;
@@ -168,5 +169,30 @@ router.delete('/auth/deleteAccount', checkauthtoken, async (req, res) => {
   }
 });
 
+//Change password
+router.put('/auth/changePassword', checkauthtoken, async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({ error: 'Old and new passwords are required' });
+  }
+
+  try {
+    const result = await pool.query(queries.findUserById, [req.userid]);
+    const user = result.rows[0];
+
+    if (!user || !(await bcrypt.compare(oldPassword, user.password_hash))) {
+      return res.status(401).json({ error: 'Invalid old password' });
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    await pool.query(queries.updateUserPassword, [hashedNewPassword, req.userid]);
+
+    res.status(200).json({ message: 'Password changed successfully' });
+  } catch (err) {
+    console.error('Password change failed:', err.stack);
+    res.status(500).json({ error: 'Password change failed' });
+  }
+});
 
 module.exports = router;
