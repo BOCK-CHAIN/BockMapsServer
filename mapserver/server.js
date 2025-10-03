@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const { connectToDatabase } = require('./config/db.js');
 const authRoutes = require('./api/auth.js');
 const listRoutes = require('./api/list.js')
+const placeContribute = require('./api/contribute.js');
 const storedAddresses = require('./api/storedAddress.js')
 
 const app = express();
@@ -25,6 +26,7 @@ connectToDatabase();
 app.use('/api', authRoutes);
 app.use('/list', listRoutes);
 app.use('/storedAddress', storedAddresses);
+app.use('/contribute', placeContribute);
 
 // Health check route
 app.get('/', (req, res) => {
