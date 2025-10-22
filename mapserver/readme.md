@@ -60,3 +60,6 @@ CREATE TABLE public.users (
 	CONSTRAINT users_unique UNIQUE (email)
 );
 ```
+
+### connecting gcp cloud sql instance to your backend
+* you can read this document and make a connection between your db and backend-[https://cloud.google.com/sql/docs/mysql/connect-auth-proxy#tcp-sockets]
